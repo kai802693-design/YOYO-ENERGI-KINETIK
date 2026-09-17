@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAR & LKPD: Energi Kinetik Yo-Yo</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js for 3D graphics and AR simulation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 h-screen flex flex-col overflow-hidden">
+
+    <header class="bg-slate-800 border-b border-slate-700 px-6 py-3 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 p-2 rounded-lg text-white font-bold shadow-lg shadow-indigo-500/30">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Virtual AR Lab: Energi Kinetik Yo-Yo</h1>
+                <p class="text-xs text-slate-400">Praktikum Mandiri & Simulasi Markerless WebAR</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-2 h-2 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                Simulasi Aktif
+            </span>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        
+        <!-- LEFT PANEL: LKPD (Lembar Kerja Peserta Didik) -->
+        <section class="w-full lg:w-1/2 bg-slate-850 border-r border-slate-700 flex flex-col h-full bg-slate-900/50">
+            <div class="p-4 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
+                <h2 class="font-semibold text-slate-200 flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>LKPD Digital: Eksperimen Yo-Yo</span>
+                </h2>
+                <button onclick="resetLKPD()" class="text-xs px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition">Reset Data</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar text-sm">
+                <!-- Tujuan Pembelajaran -->
+                <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                    <h3 class="font-bold text-indigo-400 mb-1">🎯 Tujuan Pembelajaran</h3>
+                    <p class="text-slate-300">Memahami konsep Energi Kinetik Total pada permainan yo-yo yang terdiri dari gabungan Energi Kinetik Translasi ($E_{kt}$) dan Energi Kinetik Rotasi ($E_{kr}$).</p>
+                </div>
+
+                <!-- Teori Singkat -->
+                <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                    <h3 class="font-bold text-indigo-400 mb-1">📚 Dasar Teori</h3>
+                    <p class="text-slate-300 leading-relaxed">
+                        Saat yo-yo bergerak turun atau berputar, yo-yo melakukan gerak translasi (gerak lurus ke bawah) sekaligus gerak rotasi (berputar pada porosnya).<br>
+                        Persamaan Energi Kinetik Total ($E_k$):
+                    </p>
+                    <div class="my-2 p-3 bg-slate-900 rounded-lg text-center font-mono text-cyan-300 text-xs">
+                        $E_k = E_{kt} + E_{kr} = \frac{1}{2}mv^2 + \frac{1}{2}I\omega^2$
+                    </div>
+                </div>
+
+                <!-- Variabel & Input Kontrol Eksperimen -->
+                <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 space-y-4">
+                    <h3 class="font-bold text-indigo-400">⚙️ Variabel Percobaan</h3>
+                    
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Massa Yo-Yo ($m$): <span id="val-m" class="font-bold text-cyan-400">0.15</span> kg</label>
+                        <input type="range" id="input-m" min="0.05" max="0.5" step="0.01" value="0.15" class="w-full accent-indigo-500 cursor-pointer">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Jari-Jari Yo-Yo ($R$): <span id="val-r" class="font-bold text-cyan-400">0.05</span> m</label>
+                        <input type="range" id="input-r" min="0.02" max="0.10" step="0.005" value="0.05" class="w-full accent-indigo-500 cursor-pointer">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Kecepatan Jatuh ($v$): <span id="val-v" class="font-bold text-cyan-400">2.0</span> m/s</label>
+                        <input type="range" id="input-v" min="0.5" max="5.0" step="0.1" value="2.0" class="w-full accent-indigo-500 cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Tabel Hasil Pengamatan & Perhitungan -->
+                <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <h3 class="font-bold text-indigo-400">📊 Tabel Data & Hasil Perhitungan Real-Time</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="border-b border-slate-700 text-slate-400">
+                                    <th class="py-2 px-2">Parameter</th>
+                                    <th class="py-2 px-2">Nilai</th>
+                                    <th class="py-2 px-2">Satuan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700/50">
+                                <tr>
+                                    <td class="py-2 px-2 text-slate-300">Kecepatan Sudut ($\omega = v/R$)</td>
+                                    <td id="out-omega" class="py-2 px-2 font-mono text-cyan-400">40.00</td>
+                                    <td class="py-2 px-2 text-slate-400">rad/s</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 px-2 text-slate-300">Momen Inersia ($I = \frac{1}{2}mR^2$)</td>
+                                    <td id="out-inertia" class="py-2 px-2 font-mono text-cyan-400">0.00019</td>
+                                    <td class="py-2 px-2 text-slate-400">kg·m²</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 px-2 text-slate-300">Energi Kinetik Translasi ($E_{kt}$)</td>
+                                    <td id="out-ekt" class="py-2 px-2 font-mono text-emerald-400">0.300</td>
+                                    <td class="py-2 px-2 text-slate-400">Joule</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 px-2 text-slate-300">Energi Kinetik Rotasi ($E_{kr}$)</td>
+                                    <td id="out-ekr" class="py-2 px-2 font-mono text-emerald-400">0.150</td>
+                                    <td class="py-2 px-2 text-slate-400">Joule</td>
+                                </tr>
+                                <tr class="bg-indigo-950/40 font-semibold">
+                                    <td class="py-2 px-2 text-indigo-300">Energi Kinetik Total ($E_k$)</td>
+                                    <td id="out-ektot" class="py-2 px-2 font-mono text-indigo-300">0.450</td>
+                                    <td class="py-2 px-2 text-slate-400">Joule</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Kesimpulan Mahasiswa/Siswa -->
+                <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <h3 class="font-bold text-indigo-400">✍️ Kesimpulan Analisis</h3>
+                    <textarea id="user-conclusion" placeholder="Tuliskan analisis dan kesimpulan hubungan kecepatan jatuh dengan energi kinetik total yo-yo di sini..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 h-20 resize-none"></textarea>
+                    <button onclick="saveNotes()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 font-medium text-xs rounded-lg text-white transition shadow-lg shadow-indigo-600/20">Simpan Catatan LKPD</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: WebAR 3D Interactive Simulation -->
+        <section class="w-full lg:w-1/2 relative flex flex-col h-full bg-black">
+            
+            <!-- AR Toolbar / Status Overlay -->
+            <div class="absolute top-4 left-4 right-4 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+                <div class="bg-slate-900/80 backdrop-blur-md border border-slate-700 px-3 py-1.5 rounded-lg text-xs flex items-center space-x-2 pointer-events-auto">
+                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+                    <span class="font-medium text-slate-200">Mode: AR Markerless Simulator</span>
+                </div>
+                <div class="flex items-center space-x-2 pointer-events-auto">
+                    <button id="btn-toggle-anim" onclick="toggleAnimation()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-lg shadow-md transition flex items-center space-x-1.5">
+                        <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span id="text-play">Jeda Animasi</span>
+                    </button>
+                    <button onclick="resetCamera()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg border border-slate-700 transition">Reset Kamera</button>
+                </div>
+            </div>
+
+            <!-- Three.js Canvas Container -->
+            <div id="canvas-container" class="flex-1 w-full h-full cursor-grab active:cursor-grabbing"></div>
+
+            <!-- Floating Live AR Telemetry Widget -->
+            <div class="absolute bottom-4 left-4 right-4 z-10 bg-slate-900/85 backdrop-blur-md border border-slate-700/80 p-3 rounded-xl flex items-center justify-around text-center text-xs">
+                <div>
+                    <p class="text-slate-400">Translasi ($E_{kt}$)</p>
+                    <p id="hud-ekt" class="font-bold text-emerald-400 text-sm">0.30 J</p>
+                </div>
+                <div class="w-px h-8 bg-slate-700"></div>
+                <div>
+                    <p class="text-slate-400">Rotasi ($E_{kr}$)</p>
+                    <p id="hud-ekr" class="font-bold text-emerald-400 text-sm">0.15 J</p>
+                </div>
+                <div class="w-px h-8 bg-slate-700"></div>
+                <div>
+                    <p class="text-slate-400">Total ($E_k$)</p>
+                    <p id="hud-ektot" class="font-bold text-indigo-400 text-sm">0.45 J</p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        // DOM Elements
+        const inputM = document.getElementById('input-m');
+        const inputR = document.getElementById('input-r');
+        const inputV = document.getElementById('input-v');
+
+        const valM = document.getElementById('val-m');
+        const valR = document.getElementById('val-r');
+        const valV = document.getElementById('val-v');
+
+        const outOmega = document.getElementById('out-omega');
+        const outInertia = document.getElementById('out-inertia');
+        const outEkt = document.getElementById('out-ekt');
+        const outEkr = document.getElementById('out-ekr');
+        const outEktot = document.getElementById('out-ektot');
+
+        const hudEkt = document.getElementById('hud-ekt');
+        const hudEkr = document.getElementById('hud-ekr');
+        const hudEktot = document.getElementById('hud-ektot');
+
+        const btnToggleAnim = document.getElementById('btn-toggle-anim');
+        const textPlay = document.getElementById('text-play');
+
+        let isAnimating = true;
+
+        // Physics calculation updater
+        function updatePhysics() {
+            const m = parseFloat(inputM.value);
+            const r = parseFloat(inputR.value);
+            const v = parseFloat(inputV.value);
+
+            // Display values
+            valM.textContent = m.toFixed(2);
+            valR.textContent = r.toFixed(3);
+            valV.textContent = v.toFixed(1);
+
+            // Formulas
+            const omega = v / r; // Angular velocity (rad/s)
+            const inertia = 0.5 * m * Math.pow(r, 2); // Moment of inertia for solid cylinder disk (kg.m^2)
+            const ekt = 0.5 * m * Math.pow(v, 2); // Translational KE
+            const ekr = 0.5 * inertia * Math.pow(omega, 2); // Rotational KE
+            const ektot = ekt + ekr; // Total KE
+
+            // Update LKPD Table
+            outOmega.textContent = omega.toFixed(2);
+            outInertia.textContent = inertia.toExponential(4);
+            outEkt.textContent = ekt.toFixed(3);
+            outEkr.textContent = ekr.toFixed(3);
+            outEktot.textContent = ektot.toFixed(3);
+
+            // Update HUD
+            hudEkt.textContent = ekt.toFixed(2) + ' J';
+            hudEkr.textContent = ekr.toFixed(2) + ' J';
+            hudEktot.textContent = ektot.toFixed(2) + ' J';
+
+            // Scale 3D Yo-Yo size based on input radius & mass
+            if (yoYoGroup) {
+                const scaleFactor = r * 15; // visual scaling
+                yoYoGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
+            }
+        }
+
+        // Event listeners for inputs
+        inputM.addEventListener('input', updatePhysics);
+        inputR.addEventListener('input', updatePhysics);
+        inputV.addEventListener('input', updatePhysics);
+
+        function resetLKPD() {
+            inputM.value = 0.15;
+            inputR.value = 0.05;
+            inputV.value = 2.0;
+            updatePhysics();
+        }
+
+        function saveNotes() {
+            const note = document.getElementById('user-conclusion').value;
+            if(!note.trim()) {
+                alertBox("Catatan masih kosong!", "Harap tuliskan kesimpulan sebelum menyimpan.");
+                return;
+            }
+            alertBox("Berhasil!", "Catatan LKPD telah disimpan ke memori sesi Anda.");
+        }
+
+        function alertBox(title, message) {
+            // Custom non-blocking notification modal simulation
+            const notif = document.createElement('div');
+            notif.className = 'fixed top-20 right-6 z-50 bg-slate-800 border border-indigo-500 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transition transform duration-300 translate-y-0';
+            notif.innerHTML = `
+                <div class="bg-indigo-600 p-2 rounded-lg text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-indigo-300">${title}</h4>
+                    <p class="text-xs text-slate-300">${message}</p>
+                </div>
+            `;
+            document.body.appendChild(notif);
+            setTimeout(() => {
+                notif.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
+
+        const container = document.getElementById('canvas-container');
+        let scene, camera, renderer, yoYoGroup, stringLine;
+        let clock = new THREE.Clock();
+        let verticalOffset = 0;
+
+        function initARScene() {
+            // Scene Setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0f1d);
+
+            // Camera Setup
+            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 1, 5);
+
+            // Renderer Setup
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            // Lighting for Realistic 3D look
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            directionalLight.position.set(5, 10, 7);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            const pointLight = new THREE.PointLight(0x6366f1, 2, 10);
+            pointLight.position.set(0, 0, 2);
+            scene.add(pointLight);
+
+            // AR Ground Grid & Anchor Marker Indicator (Markerless AR Grid style)
+            const gridHelper = new THREE.GridHelper(10, 20, 0x6366f1, 0x334155);
+            gridHelper.position.y = -2;
+            scene.add(gridHelper);
+
+            // Create 3D Yo-Yo Model Group
+            yoYoGroup = new THREE.Group();
+
+            // Yo-Yo Outer Disks (Left & Right)
+            const diskGeo = new THREE.CylinderGeometry(1, 1, 0.3, 32);
+            const diskMat = new THREE.MeshStandardMaterial({ 
+                color: 0x4f46e5, 
+                metalness: 0.3, 
+                roughness: 0.2,
+                emissive: 0x1e1b4b
+            });
+
+            const leftDisk = new THREE.Mesh(diskGeo, diskMat);
+            leftDisk.rotation.x = Math.PI / 2;
+            leftDisk.position.z = -0.25;
+            yoYoGroup.add(leftDisk);
+
+            const rightDisk = new THREE.Mesh(diskGeo, diskMat);
+            rightDisk.rotation.x = Math.PI / 2;
+            rightDisk.position.z = 0.25;
+            yoYoGroup.add(rightDisk);
+
+            // Yo-Yo Axon Center (Hub)
+            const axleGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.5, 16);
+            const axleMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.8, roughness: 0.1 });
+            const axle = new THREE.Mesh(axleGeo, axleMat);
+            axle.rotation.x = Math.PI / 2;
+            yoYoGroup.add(axle);
+
+            scene.add(yoYoGroup);
+
+            // Create String Line connecting top anchor point to Yo-Yo
+            const lineMat = new THREE.LineBasicMaterial({ color: 0x94a3b8, linewidth: 2 });
+            const points = [
+                new THREE.Vector3(0, 2, 0),
+                new THREE.Vector3(0, 0, 0)
+            ];
+            const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+            stringLine = new THREE.Line(lineGeo, lineMat);
+            scene.add(stringLine);
+
+            // Add interactive mouse drag for orbit rotation around simulation
+            setupInteraction();
+
+            // Start Animation Loop
+            animateScene();
+        }
+
+        // Orbit Interaction setup
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let cameraAngleX = 0;
+        let cameraAngleY = 0;
+
+        function setupInteraction() {
+            container.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            container.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+
+                cameraAngleX -= deltaX * 0.005;
+                cameraAngleY = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraAngleY + deltaY * 0.005));
+
+                updateCameraPosition();
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            window.addEventListener('mouseup', () => { isDragging = false; });
+
+            // Touch support for mobile devices
+            container.addEventListener('touchstart', (e) => {
+                if(e.touches.length === 1) {
+                    isDragging = true;
+                    previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+            });
+
+            container.addEventListener('touchmove', (e) => {
+                if (!isDragging || e.touches.length !== 1) return;
+                const deltaX = e.touches[0].clientX - previousMousePosition.x;
+                const deltaY = e.touches[0].clientY - previousMousePosition.y;
+
+                cameraAngleX -= deltaX * 0.005;
+                cameraAngleY = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraAngleY + deltaY * 0.005));
+
+                updateCameraPosition();
+                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            });
+
+            window.addEventListener('touchend', () => { isDragging = false; });
+        }
+
+        function updateCameraPosition() {
+            const distance = 5;
+            camera.position.x = distance * Math.sin(cameraAngleX) * Math.cos(cameraAngleY);
+            camera.position.y = 1 + distance * Math.sin(cameraAngleY);
+            camera.position.z = distance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY);
+            camera.lookAt(0, 0, 0);
+        }
+
+        function resetCamera() {
+            cameraAngleX = 0;
+            cameraAngleY = 0;
+            camera.position.set(0, 1, 5);
+            camera.lookAt(0, 0, 0);
+        }
+
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+            if (isAnimating) {
+                textPlay.textContent = "Jeda Animasi";
+                btnToggleAnim.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+                btnToggleAnim.classList.add('bg-indigo-600', 'hover:bg-indigo-500');
+            } else {
+                textPlay.textContent = "Lanjut Animasi";
+                btnToggleAnim.classList.remove('bg-indigo-600', 'hover:bg-indigo-500');
+                btnToggleAnim.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+            }
+        }
+
+        function animateScene() {
+            requestAnimationFrame(animateScene);
+
+            const delta = clock.getDelta();
+            const v = parseFloat(inputV.value);
+            const r = parseFloat(inputR.value);
+
+            if (isAnimating && yoYoGroup) {
+                // Yo-Yo vertical translation oscillation (up and down drop simulation)
+                verticalOffset = Math.sin(clock.getElapsedTime() * (v * 1.5)) * 1.2;
+                yoYoGroup.position.y = verticalOffset;
+
+                // Rotational spin along Z-axis proportional to angular velocity omega = v / r
+                const omega = v / r;
+                yoYoGroup.rotation.z += omega * delta * 0.5;
+
+                // Update string geometry positions dynamically matching yo-yo movement
+                const positions = stringLine.geometry.attributes.position.array;
+                positions[1] = 2; // Top anchor Y
+                positions[4] = verticalOffset; // Bottom attachment point Y matches yo-yo center
+                stringLine.geometry.attributes.position.needsUpdate = true;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Resize handler for responsive canvas
+        window.addEventListener('resize', () => {
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        });
+
+        // Initialize simulation on window load
+        window.onload = function() {
+            updatePhysics();
+            initARScene();
+        };
+    </script>
+</body>
+</html>
